@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Juegos</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background: linear-gradient(
+        to bottom right,
+        #014421 0%,
+        #000000 100%
+      );
+      background-size: cover;
+      text-align: center;
+      padding: 20px;
+      color: white;
+    }
+
+    .container {
+      background: rgba(0, 0, 0, 0.6);
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
+      width: 90%;
+      max-width: 400px;
+    }
+
+    h2 {
+      font-size: 28px;
+      margin-bottom: 25px;
+      color: #00e676;
+    }
+
+    button {
+      background-color: #000;
+      color: #00e676;
+      border: 2px solid #00e676;
+      padding: 14px;
+      margin: 10px 0;
+      border-radius: 8px;
+      width: 100%;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #00e676;
+      color: #000;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>Juegos Educativos</h2>
+    <button onclick="window.location.href='sopa de letras 1.html'">Sopa de Letras 1</button>
+    <button onclick="window.location.href='sopa2.html'">Sopa de Letras 2</button>
+    <button onclick="window.location.href='quiz.html'">Quiz</button>
+    <button onclick="window.location.href='adivinapalabra.html'">Adivina la palabra</button>
+    <button onclick="window.location.href='menu principal.html'">Volver al Menú</button>
+  </div>
+
+</body>
+</html>
