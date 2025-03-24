@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { Link } from 'react-router-dom';
+
 import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
 import { Navbar, Nav, Container } from "react-bootstrap";
@@ -59,12 +61,13 @@ export const NavBar = () => {
               <Nav.Link href="#skills" className={activeLink === 'skills' ? 'active navbar-link' : 'navbar-link'} onClick={() => onUpdateActiveLink('skills')}>Contacto</Nav.Link>
               <Nav.Link href="#projects" className={activeLink === 'projects' ? 'active navbar-link' : 'navbar-link'} onClick={() => onUpdateActiveLink('projects')}>Información</Nav.Link>
               <Nav.Link
-                href="/Aprendimos/evaluemos%20lo%20aprendido.html"
+                href="/Aprendimos/evaluemosloaprendido.html"
                 className={activeLink === 'evaluemos' ? 'active navbar-link' : 'navbar-link'}
                 onClick={() => onUpdateActiveLink('evaluemos')}
               >
                 Evaluemos lo aprendido
               </Nav.Link>
+              
             </Nav>
             <span className="navbar-text">
               <div className="social-icon">
