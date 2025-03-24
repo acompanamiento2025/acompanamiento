@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Adivina la Palabra con Pistas</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to bottom right, #014421, #000000);
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #00e676;
+      margin-bottom: 20px;
+    }
+
+    .game-container {
+      background: rgba(0,0,0,0.6);
+      padding: 30px;
+      border-radius: 12px;
+      max-width: 700px;
+      margin: auto;
+      box-shadow: 0 0 20px rgba(0,0,0,0.4);
+    }
+
+    .clue {
+      font-size: 18px;
+      margin-bottom: 10px;
+      font-style: italic;
+      color: #aaf8c5;
+    }
+
+    .word {
+      font-size: 32px;
+      letter-spacing: 10px;
+      margin-bottom: 20px;
+    }
+
+    .letters {
+      margin: 20px 0;
+    }
+
+    .letters button {
+      margin: 5px;
+      padding: 10px;
+      width: 40px;
+      border: none;
+      background: black;
+      color: #00e676;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .letters button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .message {
+      font-size: 20px;
+      margin-top: 20px;
+    }
+
+    button#reiniciar {
+      margin-top: 30px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background: black;
+      color: #00e676;
+      border: 2px solid #00e676;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    button#reiniciar:hover {
+      background: #00e676;
+      color: black;
+    }
+  </style>
+</head>
+<body>
+  <h1>Adivina la Palabra</h1>
+  <div class="game-container">
+    <div class="clue" id="clueText">Pista aquí</div>
+    <div class="word" id="wordDisplay">_ _ _ _</div>
+    <div class="letters" id="letterButtons"></div>
+    <div class="message" id="message"></div>
+    <button id="reiniciar" onclick="iniciarJuego()">Reiniciar</button>
+  </div>
+
+  <script>
+    const palabras = [
+      { palabra: "ADICCION", pista: "Estado en el que una persona no puede dejar de consumir una sustancia." },
+      { palabra: "PREVENCION", pista: "Acción que busca evitar el uso de drogas desde el conocimiento." },
+      { palabra: "AUTOCUIDADO", pista: "Hábito saludable de protegerse a uno mismo." },
+      { palabra: "REHABILITACION", pista: "Proceso para ayudar a una persona a dejar una adicción." },
+      { palabra: "RESPETO", pista: "Valor fundamental para convivir y tomar buenas decisiones." },
+      { palabra: "VALORES", pista: "Principios que guían el comportamiento correcto." },
+      { palabra: "RIESGO", pista: "Situación que puede provocar consecuencias negativas." },
+      { palabra: "FAMILIA", pista: "Grupo de apoyo clave para prevenir el consumo." },
+      { palabra: "SALUD", pista: "Estado de bienestar físico y mental que puede afectarse por las drogas." },
+      { palabra: "DECISION", pista: "Elección entre opciones, importante para evitar adicciones." }
+    ];
+
+    let palabraSeleccionada = "";
+    let pistaSeleccionada = "";
+    let palabraAdivinada = [];
+    let intentosRestantes = 6;
+
+    function iniciarJuego() {
+      const seleccion = palabras[Math.floor(Math.random() * palabras.length)];
+      palabraSeleccionada = seleccion.palabra;
+      pistaSeleccionada = seleccion.pista;
+      palabraAdivinada = Array(palabraSeleccionada.length).fill("_");
+      intentosRestantes = 6;
+      document.getElementById("message").textContent = "";
+      document.getElementById("clueText").textContent = "Pista: " + pistaSeleccionada;
+      mostrarPalabra();
+      generarBotones();
+    }
+
+    function mostrarPalabra() {
+      document.getElementById("wordDisplay").textContent = palabraAdivinada.join(" ");
+    }
+
+    function generarBotones() {
+      const letras = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ";
+      const contenedor = document.getElementById("letterButtons");
+      contenedor.innerHTML = "";
+      for (let letra of letras) {
+        const btn = document.createElement("button");
+        btn.textContent = letra;
+        btn.onclick = () => manejarLetra(letra, btn);
+        contenedor.appendChild(btn);
+      }
+    }
+
+    function manejarLetra(letra, boton) {
+      boton.disabled = true;
+      let acierto = false;
+      for (let i = 0; i < palabraSeleccionada.length; i++) {
+        if (palabraSeleccionada[i] === letra) {
+          palabraAdivinada[i] = letra;
+          acierto = true;
+        }
+      }
+      mostrarPalabra();
+      if (!acierto) {
+        intentosRestantes--;
+      }
+      verificarFinJuego();
+    }
+
+    function verificarFinJuego() {
+      if (!palabraAdivinada.includes("_")) {
+        document.getElementById("message").textContent = "🎉 ¡Correcto! Has adivinado la palabra.";
+        deshabilitarBotones();
+      } else if (intentosRestantes === 0) {
+        document.getElementById("message").textContent = `❌ Has perdido. La palabra era: ${palabraSeleccionada}`;
+        deshabilitarBotones();
+      }
+    }
+
+    function deshabilitarBotones() {
+      document.querySelectorAll(".letters button").forEach(btn => btn.disabled = true);
+    }
+
+    iniciarJuego();
+  </script>
+
+  <div style="margin-top: 20px;">
+    <button id="regresar" onclick="window.location.href='evaluemos lo aprendido.html'">Volver al Menú de Juegos</button>
+  </div>
+
+</body>
+</html>

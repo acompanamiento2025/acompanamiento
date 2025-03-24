@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sopa de Letras 2</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: linear-gradient(to bottom right, #014421, #000000);
+      color: #fff;
+      margin: 0;
+      padding: 0;
+    }
+
+    h1 {
+      padding-top: 20px;
+      color: #00e676;
+    }
+
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: start;
+      margin-top: 20px;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(15, 40px);
+      gap: 2px;
+    }
+
+    .cell {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #ccc;
+      background: rgba(255, 255, 255, 0.9);
+      font-size: 18px;
+      cursor: pointer;
+      user-select: none;
+      color: black;
+      border-radius: 4px;
+    }
+
+    .selected {
+      background: lightblue;
+    }
+
+    .correct {
+      background: lightgreen;
+    }
+
+    .incorrect {
+      background: lightcoral;
+    }
+
+    .word-list {
+      text-align: left;
+      font-size: 18px;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+      color: black;
+    }
+
+    .button-container {
+      margin: 30px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background: black;
+      color: #00e676;
+      border: 2px solid #00e676;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    button:hover {
+      background: #00e676;
+      color: black;
+    }
+  </style>
+</head>
+<body>
+  <h1>Sopa de Letras - Estilos de Vida Saludables</h1>
+  <div class="container">
+    <div class="grid" id="grid"></div>
+    <div class="word-list">
+      <h3>Palabras a buscar:</h3>
+      <ul id="lista-palabras"></ul>
+    </div>
+  </div>
+
+  <div class="button-container">
+    <button onclick="window.location.href='evaluemos lo aprendido.html'">Volver al Menú de Juegos</button>
+  </div>
+
+  <script>
+    const palabras = [
+      "DEPORTE", "MENTALIDAD", "ESCAPAR", "ESTRATEGIA", "REFLEXION",
+      "HABITOS", "ESCUELA", "AMIGOS", "ELECCION", "FUTURO",
+      "ESPERANZA", "PROTECCION", "CONSULTA", "CAMBIO", "MOTIVACION"
+    ];
+
+    const tamano = 15;
+    let seleccionadas = [];
+    let tablero = Array.from({ length: tamano }, () => Array(tamano).fill(''));
+    let seleccionando = false;
+
+    function colocarPalabra(palabra) {
+      let fila = Math.floor(Math.random() * tamano);
+      let columna = Math.floor(Math.random() * (tamano - palabra.length));
+      for (let i = 0; i < palabra.length; i++) {
+        tablero[fila][columna + i] = palabra[i];
+      }
+    }
+
+    palabras.forEach(colocarPalabra);
+
+    function llenarTablero() {
+      for (let i = 0; i < tamano; i++) {
+        for (let j = 0; j < tamano; j++) {
+          if (tablero[i][j] === '') {
+            tablero[i][j] = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+          }
+        }
+      }
+    }
+
+    llenarTablero();
+
+    function crearTablero() {
+      const grid = document.getElementById("grid");
+      for (let i = 0; i < tamano; i++) {
+        for (let j = 0; j < tamano; j++) {
+          const cell = document.createElement("div");
+          cell.classList.add("cell");
+          cell.textContent = tablero[i][j];
+          cell.dataset.row = i;
+          cell.dataset.col = j;
+
+          cell.addEventListener("mousedown", () => iniciarSeleccion(cell));
+          cell.addEventListener("mouseenter", () => arrastrarSeleccion(cell));
+          cell.addEventListener("mouseup", validarPalabra);
+
+          grid.appendChild(cell);
+        }
+      }
+
+      const ul = document.getElementById("lista-palabras");
+      palabras.forEach(p => {
+        const li = document.createElement("li");
+        li.textContent = p;
+        ul.appendChild(li);
+      });
+    }
+
+    function iniciarSeleccion(cell) {
+      seleccionadas = [];
+      limpiarSeleccion();
+      seleccionando = true;
+      seleccionarLetra(cell);
+    }
+
+    function arrastrarSeleccion(cell) {
+      if (seleccionando) {
+        seleccionarLetra(cell);
+      }
+    }
+
+    function seleccionarLetra(cell) {
+      if (!seleccionadas.includes(cell)) {
+        cell.classList.add("selected");
+        seleccionadas.push(cell);
+      }
+    }
+
+    function validarPalabra() {
+      if (!seleccionando) return;
+      seleccionando = false;
+
+      const palabraSeleccionada = seleccionadas.map(c => c.textContent).join("");
+
+      if (palabras.includes(palabraSeleccionada)) {
+        seleccionadas.forEach(c => c.classList.add("correct"));
+      } else {
+        seleccionadas.forEach(c => c.classList.add("incorrect"));
+        setTimeout(() => {
+          seleccionadas.forEach(c => c.classList.remove("incorrect", "selected"));
+        }, 500);
+      }
+    }
+
+    function limpiarSeleccion() {
+      document.querySelectorAll(".selected").forEach(c => c.classList.remove("selected"));
+    }
+
+    document.addEventListener("mouseup", () => {
+      seleccionando = false;
+    });
+
+    crearTablero();
+  </script>
+</body>
+</html>
