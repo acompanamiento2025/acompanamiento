@@ -51,6 +51,13 @@
       background-color: #00e676;
       color: #000;
     }
+
+    #toggle-voz {
+      width: auto;
+      padding: 10px 20px;
+      margin-top: 15px;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
@@ -62,10 +69,21 @@
     <button data-voz="Quiz de preguntas" onclick="window.location.href='quiz.html'">Quiz</button>
     <button data-voz="Adivina la palabra" onclick="window.location.href='adivinapalabra.html'">Adivina la palabra</button>
     <button data-voz="Volver al menú principal" onclick="window.location.href='/acompanamiento/'">Volver al Menú</button>
+
+    <!-- Botón de control de voz -->
+    <button id="toggle-voz">🔇 Desactivar Voz</button>
   </div>
 
   <script>
+    let vozActiva = true;
+
+    document.getElementById("toggle-voz").addEventListener("click", function() {
+      vozActiva = !vozActiva;
+      this.textContent = vozActiva ? "🔇 Desactivar Voz" : "🔊 Activar Voz";
+    });
+
     document.addEventListener("mouseover", function(e) {
+      if (!vozActiva) return;
       const texto = e.target.getAttribute("data-voz") || e.target.innerText;
       if (texto && texto.trim().length > 0) {
         const voz = new SpeechSynthesisUtterance(texto.trim());
@@ -78,3 +96,5 @@
 
 </body>
 </html>
+
+
