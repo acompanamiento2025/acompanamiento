@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Evaluaciones</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to bottom, #014128, #001812);
+      color: #fff;
+      padding: 20px;
+      margin: 0;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+    }
+
+    header h2 {
+      color: #00e676;
+      margin: 0;
+    }
+
+    header img {
+      height: 80px;
+      border-radius: 8px;
+    }
+
+    h3 {
+      color: #ffc107;
+      margin-top: 1.5rem;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 12px;
+      border-radius: 6px;
+      border: none;
+      font-size: 15px;
+      background-color: #10372c;
+      color: #e6ffe6;
+    }
+
+    textarea {
+      font-family: monospace;
+      background-color: #144136;
+      color: #cceccc;
+    }
+
+    button {
+      background: #00e676;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: background 0.3s ease;
+      margin: 6px;
+    }
+
+    button:hover {
+      background: #00ff99;
+    }
+
+    .msg {
+      padding: 10px;
+      border-radius: 6px;
+      margin-top: 10px;
+      font-weight: bold;
+      animation: fadeIn 0.5s ease-in-out;
+      text-align: center;
+    }
+
+    .success { background: #009e60; color: #fff; }
+    .error { background: #c62828; color: #fff; }
+
+    .respuestas {
+      background-color: #01422f;
+      padding: 12px;
+      margin-top: 12px;
+      border-radius: 6px;
+      animation: fadeIn 0.4s ease-in;
+    }
+
+    .respuestas .acciones {
+      text-align: center;
+      margin-top: 8px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    a {
+      color: #00e676;
+      text-decoration: none;
+    }
+
+    @media (max-width: 600px) {
+      header {
+        flex-direction: column-reverse;
+        align-items: center;
+      }
+
+      header img {
+        height: 60px;
+        margin-bottom: 10px;
+      }
+
+      header h2 {
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h2>🧪 Administrador de Evaluaciones</h2>
+    <img src="unnamed.png" alt="Logo">
+  </header>
+
+  <h3 id="tituloForm">📋 Crear nueva prueba</h3>
+  <input type="text" id="nombreTest" placeholder="Nombre de la prueba" />
+  <textarea id="jsonPreguntas" rows="10" placeholder='[
+  {
+    "texto": "¿Qué es una droga?",
+    "opciones": ["Medicamento", "Sustancia psicoactiva", "Vitamina"],
+    "correcta": 1,
+    "reflexion": "Las drogas son sustancias psicoactivas que afectan el sistema nervioso."
+  }
+]'></textarea>
+
+  <button id="btnCrearTest">Crear prueba</button>
+  <button id="btnGuardarCambios" style="display: none;">💾 Guardar Cambios</button>
+  <div id="msgTest" class="msg"></div>
+
+  <h3>📚 Pruebas existentes</h3>
+  <div id="listaTests"></div>
+
+  <h3>📈 Resultados</h3>
+  <div id="listaResultados"></div>
+
+  <div style="margin-top: 2rem;">
+    <a href="evaluacion.html">🔙 Volver a vista del usuario</a>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      getDocs,
+      deleteDoc,
+      doc,
+      setDoc,
+      getDoc
+    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDVn8rox_TbXhGFRKP_mW_zjaIHS2mE84E",
+      authDomain: "acompanamiento-87e74.firebaseapp.com",
+      projectId: "acompanamiento-87e74",
+      storageBucket: "acompanamiento-87e74.appspot.com",
+      messagingSenderId: "305795840612",
+      appId: "1:305795840612:web:20c87f474b0cad842ebd71"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const nombreInput = document.getElementById("nombreTest");
+    const jsonTextarea = document.getElementById("jsonPreguntas");
+    const msg = document.getElementById("msgTest");
+    const btnCrear = document.getElementById("btnCrearTest");
+    const btnGuardar = document.getElementById("btnGuardarCambios");
+    const tituloForm = document.getElementById("tituloForm");
+
+    let testEditandoId = null;
+
+    btnCrear.addEventListener("click", async () => {
+      const nombre = nombreInput.value.trim();
+      const texto = jsonTextarea.value.trim();
+      msg.innerHTML = "";
+
+      if (!nombre || !texto) {
+        msg.innerHTML = `<div class="error">⚠️ Completa todos los campos.</div>`;
+        return;
+      }
+
+      try {
+        const preguntas = JSON.parse(texto);
+        if (!Array.isArray(preguntas) || preguntas.length === 0) {
+          msg.innerHTML = `<div class="error">❌ El JSON debe ser un arreglo de preguntas.</div>`;
+          return;
+        }
+
+        await addDoc(collection(db, "tests"), { nombre, preguntas });
+        msg.innerHTML = `<div class="success">✅ Prueba creada correctamente.</div>`;
+        limpiarFormulario();
+        cargarTests();
+      } catch (err) {
+        msg.innerHTML = `<div class="error">❌ Error al crear: ${err.message}</div>`;
+      }
+    });
+
+    btnGuardar.addEventListener("click", async () => {
+      const nombre = nombreInput.value.trim();
+      const texto = jsonTextarea.value.trim();
+      msg.innerHTML = "";
+
+      if (!nombre || !texto || !testEditandoId) return;
+
+      try {
+        const preguntas = JSON.parse(texto);
+        await setDoc(doc(db, "tests", testEditandoId), { nombre, preguntas });
+        msg.innerHTML = `<div class="success">✅ Prueba actualizada correctamente.</div>`;
+        limpiarFormulario();
+        cargarTests();
+      } catch (err) {
+        msg.innerHTML = `<div class="error">❌ Error al editar: ${err.message}</div>`;
+      }
+    });
+
+    function limpiarFormulario() {
+      nombreInput.value = "";
+      jsonTextarea.value = "";
+      testEditandoId = null;
+      btnCrear.style.display = "inline-block";
+      btnGuardar.style.display = "none";
+      tituloForm.innerText = "📋 Crear nueva prueba";
+    }
+
+    async function cargarTests() {
+      const contenedor = document.getElementById("listaTests");
+      contenedor.innerHTML = "";
+      const snap = await getDocs(collection(db, "tests"));
+
+      snap.forEach(docSnap => {
+        const data = docSnap.data();
+        const div = document.createElement("div");
+        div.className = "respuestas";
+        div.innerHTML = `
+          <strong>${data.nombre}</strong><br/>
+          Total preguntas: ${data.preguntas.length}
+          <div class="acciones">
+            <button onclick="eliminarTest('${docSnap.id}')">🗑️ Eliminar</button>
+            <button onclick="editarTest('${docSnap.id}')">✏️ Editar</button>
+          </div>
+        `;
+        contenedor.appendChild(div);
+      });
+    }
+
+    async function editarTest(id) {
+      const docRef = doc(db, "tests", id);
+      const snap = await getDoc(docRef);
+
+      if (snap.exists()) {
+        const data = snap.data();
+        nombreInput.value = data.nombre;
+        jsonTextarea.value = JSON.stringify(data.preguntas, null, 2);
+        testEditandoId = id;
+        btnCrear.style.display = "none";
+        btnGuardar.style.display = "inline-block";
+        tituloForm.innerText = "✏️ Editando prueba existente";
+        msg.innerHTML = `<div class="success">📝 Puedes editar y guardar cambios.</div>`;
+      }
+    }
+
+    async function cargarResultados() {
+      const contenedor = document.getElementById("listaResultados");
+      contenedor.innerHTML = "";
+
+      const testsSnap = await getDocs(collection(db, "tests"));
+      const mapaNombres = {};
+      testsSnap.forEach(doc => {
+        mapaNombres[doc.id] = doc.data().nombre;
+      });
+
+      const snap = await getDocs(collection(db, "respuestas"));
+      snap.forEach(docSnap => {
+        const r = docSnap.data();
+        const nombrePrueba = mapaNombres[r.idTest] || r.idTest;
+        const div = document.createElement("div");
+        div.className = "respuestas";
+        div.innerHTML = `👤 ${r.nombre} | Prueba: ${nombrePrueba} | Nota: ${r.nota}`;
+        contenedor.appendChild(div);
+      });
+    }
+
+    window.eliminarTest = async (id) => {
+      if (confirm("¿Eliminar esta prueba?")) {
+        await deleteDoc(doc(db, "tests", id));
+        cargarTests();
+      }
+    };
+
+    window.editarTest = editarTest;
+
+    cargarTests();
+    cargarResultados();
+  </script>
+</body>
+</html>

@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Evaluación Pedagógica</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: linear-gradient(to bottom right, #013124, #000000);
+      color: #fff;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 15px 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+    }
+
+    .header h2 {
+      color: #00e676;
+      margin: 0;
+      font-size: 1.8rem;
+    }
+
+    .header img {
+      height: 55px;
+      border-radius: 8px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px;
+      margin: 12px 0;
+      border-radius: 6px;
+      border: none;
+      font-size: 1rem;
+      background: #002b1f;
+      color: #fff;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border-radius: 6px;
+      border: none;
+      font-size: 1rem;
+      background-color: #00e676;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      display: inline-block;
+      margin: 10px auto;
+    }
+
+    .btn:hover {
+      background-color: #00b35c;
+    }
+
+    .center {
+      text-align: center;
+    }
+
+    .pregunta {
+      background: #00372a;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 15px;
+      animation: fadeInUp 0.4s ease;
+    }
+
+    .pregunta strong {
+      color: #ffc107;
+    }
+
+    .resultado {
+      background: rgba(0, 0, 0, 0.5);
+      padding: 15px;
+      border-radius: 6px;
+      margin-top: 20px;
+      font-weight: bold;
+      animation: fadeIn 0.5s ease;
+    }
+
+    .admin-btn {
+      margin-top: 30px;
+      background: #00372a;
+      padding: 12px;
+      text-align: center;
+      border-radius: 6px;
+    }
+
+    .admin-btn a {
+      text-decoration: none;
+      color: #00e676;
+      font-weight: bold;
+    }
+
+    .admin-btn a:hover {
+      text-decoration: underline;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(15px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .header {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+      }
+
+      .header h2 {
+        font-size: 1.4rem;
+      }
+
+      .header img {
+        height: 45px;
+      }
+
+      .btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h2>🧠 Evaluaciones Pedagógicas</h2>
+    <img src="unnamed.png" alt="Logo" />
+  </div>
+
+  <input type="text" id="nombre" placeholder="Ingresa tu nombre completo">
+  <select id="selectorTest"></select>
+
+  <div id="formularioPreguntas"></div>
+
+  <div class="center">
+    <button id="enviarRespuestas" class="btn">✅ Enviar Respuestas</button>
+  </div>
+
+  <div id="mensajeResultado" class="resultado"></div>
+
+  <div class="center">
+    <button class="btn" onclick="window.location.href='login_admin.html?next=admin_evaluacion.html'">
+      👩‍🏫 Ir al panel del Administrador
+    </button>
+  </div>
+
+  <div class="admin-btn">
+    <a href="menu_principal.html">🔙 Volver al Menú Principal</a>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import {
+      getFirestore, collection, getDocs, addDoc, doc, getDoc, setDoc
+    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDVn8rox_TbXhGFRKP_mW_zjaIHS2mE84E",
+      authDomain: "acompanamiento-87e74.firebaseapp.com",
+      projectId: "acompanamiento-87e74",
+      storageBucket: "acompanamiento-87e74.appspot.com",
+      messagingSenderId: "305795840612",
+      appId: "1:305795840612:web:20c87f474b0cad842ebd71"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const selector = document.getElementById("selectorTest");
+    const contenedor = document.getElementById("formularioPreguntas");
+    const btnEnviar = document.getElementById("enviarRespuestas");
+    const mensajeResultado = document.getElementById("mensajeResultado");
+
+    let preguntasActuales = [];
+    let idTestActual = "";
+
+    async function cargarTests() {
+      const snap = await getDocs(collection(db, "tests"));
+      selector.innerHTML = "<option disabled selected>Selecciona una prueba</option>";
+      snap.forEach(doc => {
+        selector.innerHTML += `<option value="${doc.id}">${doc.data().nombre}</option>`;
+      });
+    }
+
+    selector.addEventListener("change", async () => {
+      idTestActual = selector.value;
+      const docRef = doc(db, "tests", idTestActual);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        preguntasActuales = docSnap.data().preguntas;
+        mostrarFormulario();
+      }
+    });
+
+    function mostrarFormulario() {
+      contenedor.innerHTML = "";
+      preguntasActuales.forEach((pregunta, index) => {
+        let opciones = pregunta.opciones.map((op, i) => `
+          <label><input type="radio" name="preg${index}" value="${i}"> ${op}</label><br/>
+        `).join("");
+
+        contenedor.innerHTML += `
+          <div class="pregunta">
+            <strong>${index + 1}. ${pregunta.texto}</strong><br/>
+            ${opciones}
+          </div>
+        `;
+      });
+    }
+
+    btnEnviar.addEventListener("click", async () => {
+      const nombre = document.getElementById("nombre").value.trim();
+      if (!nombre || !idTestActual) {
+        alert("Completa tu nombre y selecciona una prueba");
+        return;
+      }
+
+      let correctas = 0;
+      preguntasActuales.forEach((pregunta, index) => {
+        const seleccion = document.querySelector(`input[name="preg${index}"]:checked`);
+        if (seleccion && parseInt(seleccion.value) === pregunta.correcta) correctas++;
+      });
+
+      const total = preguntasActuales.length;
+      const nota = Math.round((correctas / total) * 100);
+
+      const idRespuesta = `${idTestActual}_${nombre.replace(/\s/g, "_")}`;
+      const yaRespondido = await getDoc(doc(db, "respuestas", idRespuesta));
+      if (yaRespondido.exists()) {
+        mensajeResultado.innerText = "⚠️ Ya has presentado esta prueba.";
+        return;
+      }
+
+      await setDoc(doc(db, "respuestas", idRespuesta), {
+        nombre,
+        idTest: idTestActual,
+        nota,
+        fecha: new Date()
+      });
+
+      let mensaje = "";
+      if (nota >= 90) {
+        mensaje = `🌟 Excelente, tu nota es ${nota}/100. Gran conciencia sobre las sustancias psicoactivas. ¡Sigue así!`;
+      } else if (nota >= 70) {
+        mensaje = `✅ Buen trabajo, tu nota es ${nota}/100. Puedes reforzar un poco más tu conocimiento.`;
+      } else if (nota >= 50) {
+        mensaje = `⚠️ Tu nota es ${nota}/100. Necesitas repasar temas clave sobre las sustancias.`;
+      } else {
+        mensaje = `🚨 Tu nota es ${nota}/100. El desconocimiento sobre las drogas puede poner en riesgo tu vida. Reflexiona y busca ayuda si la necesitas.`;
+      }
+
+      mensajeResultado.innerText = mensaje;
+      contenedor.innerHTML = "";
+      btnEnviar.disabled = true;
+      btnEnviar.style.opacity = "0.5";
+      selector.selectedIndex = 0;
+    });
+
+    cargarTests();
+  </script>
+</body>
+</html>

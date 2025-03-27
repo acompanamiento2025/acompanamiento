@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Actividades</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to bottom, #014128, #001812);
+      color: #fff;
+      padding: 20px;
+      margin: 0;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    header img {
+      height: 60px;
+      border-radius: 6px;
+    }
+
+    h2 {
+      color: #00e676;
+      font-size: 1.7rem;
+    }
+
+    h3 {
+      color: #ffc107;
+      margin-top: 1.5rem;
+    }
+
+    input, textarea, button {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 12px;
+      border-radius: 5px;
+      border: none;
+      font-size: 1rem;
+    }
+
+    button {
+      background: #00e676;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: #00b35c;
+    }
+
+    .msg {
+      padding: 10px;
+      border-radius: 6px;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    .success { background: #009e60; }
+    .error { background: #c62828; }
+
+    .entry {
+      background-color: #022e21;
+      border-left: 3px solid #00e676;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      text-align: center;
+    }
+
+    .entry button {
+      display: inline-block;
+      margin: 6px 6px 0 6px;
+      padding: 6px 14px;
+      font-size: 0.85rem;
+      border-radius: 5px;
+      background: #015c45;
+      color: #fff;
+      border: none;
+      width: auto;
+      min-width: 90px;
+    }
+
+    .entry button:hover {
+      background-color: #00b77a;
+    }
+
+    .back-button {
+      margin-top: 2rem;
+      text-align: center;
+    }
+
+    .back-button a {
+      color: #00e676;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    @media (max-width: 600px) {
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      header img {
+        height: 50px;
+        margin-top: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h2>🔐 Panel de Administración</h2>
+    <img src="unnamed.png" alt="Logo">
+  </header>
+
+  <h3>📂 Subir actividad (PDF)</h3>
+  <input type="text" id="nombre" placeholder="Nombre del archivo" />
+  <input type="text" id="objetivo" placeholder="Objetivo asociado" />
+  <input type="file" id="archivo" accept="application/pdf" />
+  <button id="btnActividad">Subir Actividad</button>
+  <div id="msgActividad" class="msg"></div>
+  <div id="listaActividades"></div>
+
+  <hr/>
+
+  <h3>📢 Publicar anuncio</h3>
+  <textarea id="anuncioTexto" placeholder="Escribe el anuncio..."></textarea>
+  <button id="btnAnuncio">Publicar Anuncio</button>
+  <div id="msgAnuncio" class="msg"></div>
+  <div id="listaAnuncios"></div>
+
+  <div class="back-button">
+    <a href="usuario_actividades.html">🔙 Volver a vista de usuario</a>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      getDocs,
+      deleteDoc,
+      updateDoc,
+      getDoc,
+      doc,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
+    const app = initializeApp({
+      apiKey: "AIzaSyDVn8rox_TbXhGFRKP_mW_zjaIHS2mE84E",
+      authDomain: "acompanamiento-87e74.firebaseapp.com",
+      projectId: "acompanamiento-87e74",
+      storageBucket: "acompanamiento-87e74.appspot.com",
+      messagingSenderId: "305795840612",
+      appId: "1:305795840612:web:20c87f474b0cad842ebd71"
+    });
+
+    const db = getFirestore(app);
+
+    const nombreInput = document.getElementById("nombre");
+    const objetivoInput = document.getElementById("objetivo");
+    const archivoInput = document.getElementById("archivo");
+    const anuncioInput = document.getElementById("anuncioTexto");
+    const msgActividad = document.getElementById("msgActividad");
+    const msgAnuncio = document.getElementById("msgAnuncio");
+    const listaActividades = document.getElementById("listaActividades");
+    const listaAnuncios = document.getElementById("listaAnuncios");
+
+    let idEditandoActividad = null;
+    let idEditandoAnuncio = null;
+
+    document.getElementById("btnActividad").addEventListener("click", async () => {
+      const nombre = nombreInput.value.trim();
+      const objetivo = objetivoInput.value.trim();
+      const archivo = archivoInput.files[0];
+      msgActividad.innerHTML = "";
+
+      if (!nombre || !objetivo) {
+        msgActividad.innerHTML = `<div class="error">⚠️ Completa todos los campos.</div>`;
+        return;
+      }
+
+      const guardarActividad = async (base64 = null) => {
+        try {
+          const data = { nombre, objetivo, fecha: serverTimestamp() };
+          if (base64) data.archivoBase64 = base64;
+
+          if (idEditandoActividad) {
+            await updateDoc(doc(db, "actividades", idEditandoActividad), data);
+            msgActividad.innerHTML = `<div class="success">✅ Actividad actualizada.</div>`;
+            idEditandoActividad = null;
+          } else {
+            if (!archivo) {
+              msgActividad.innerHTML = `<div class="error">⚠️ Selecciona un archivo PDF.</div>`;
+              return;
+            }
+            data.archivoBase64 = base64;
+            await addDoc(collection(db, "actividades"), data);
+            msgActividad.innerHTML = `<div class="success">✅ Actividad subida con éxito.</div>`;
+          }
+
+          nombreInput.value = "";
+          objetivoInput.value = "";
+          archivoInput.value = "";
+          cargarActividades();
+        } catch (err) {
+          msgActividad.innerHTML = `<div class="error">❌ ${err.message}</div>`;
+        }
+      };
+
+      if (archivo) {
+        const reader = new FileReader();
+        reader.onload = () => guardarActividad(reader.result);
+        reader.readAsDataURL(archivo);
+      } else {
+        guardarActividad();
+      }
+    });
+
+    document.getElementById("btnAnuncio").addEventListener("click", async () => {
+      const texto = anuncioInput.value.trim();
+      msgAnuncio.innerHTML = "";
+
+      if (!texto) {
+        msgAnuncio.innerHTML = `<div class="error">⚠️ El anuncio está vacío.</div>`;
+        return;
+      }
+
+      try {
+        if (idEditandoAnuncio) {
+          await updateDoc(doc(db, "anuncios", idEditandoAnuncio), {
+            mensaje: texto,
+            fecha: serverTimestamp()
+          });
+          msgAnuncio.innerHTML = `<div class="success">✅ Anuncio actualizado.</div>`;
+          idEditandoAnuncio = null;
+        } else {
+          await addDoc(collection(db, "anuncios"), {
+            mensaje: texto,
+            fecha: serverTimestamp()
+          });
+          msgAnuncio.innerHTML = `<div class="success">✅ Anuncio publicado con éxito.</div>`;
+        }
+
+        anuncioInput.value = "";
+        cargarAnuncios();
+      } catch (err) {
+        msgAnuncio.innerHTML = `<div class="error">❌ ${err.message}</div>`;
+      }
+    });
+
+    async function cargarActividades() {
+      listaActividades.innerHTML = "<h4>📁 Actividades existentes:</h4>";
+      const snap = await getDocs(collection(db, "actividades"));
+      snap.forEach(docSnap => {
+        const a = docSnap.data();
+        const div = document.createElement("div");
+        div.className = "entry";
+        div.innerHTML = `
+          <strong>📌 ${a.nombre}</strong><br/>
+          Objetivo: ${a.objetivo}<br/>
+          <button onclick="editarActividad('${docSnap.id}')">✏️ Editar</button>
+          <button onclick="eliminarActividad('${docSnap.id}')">🗑️ Eliminar</button>
+        `;
+        listaActividades.appendChild(div);
+      });
+    }
+
+    async function cargarAnuncios() {
+      listaAnuncios.innerHTML = "<h4>📣 Anuncios existentes:</h4>";
+      const snap = await getDocs(collection(db, "anuncios"));
+      snap.forEach(docSnap => {
+        const a = docSnap.data();
+        const div = document.createElement("div");
+        div.className = "entry";
+        div.innerHTML = `
+          📢 ${a.mensaje}<br/>
+          <button onclick="editarAnuncio('${docSnap.id}')">✏️ Editar</button>
+          <button onclick="eliminarAnuncio('${docSnap.id}')">🗑️ Eliminar</button>
+        `;
+        listaAnuncios.appendChild(div);
+      });
+    }
+
+    window.eliminarActividad = async (id) => {
+      if (confirm("¿Eliminar esta actividad?")) {
+        await deleteDoc(doc(db, "actividades", id));
+        cargarActividades();
+      }
+    };
+
+    window.editarActividad = async (id) => {
+      const snap = await getDoc(doc(db, "actividades", id));
+      if (snap.exists()) {
+        const a = snap.data();
+        nombreInput.value = a.nombre;
+        objetivoInput.value = a.objetivo;
+        idEditandoActividad = id;
+        msgActividad.innerHTML = `<div class="success">✏️ Editando actividad. Puedes subir nuevo PDF o dejar el actual.</div>`;
+      }
+    };
+
+    window.eliminarAnuncio = async (id) => {
+      if (confirm("¿Eliminar este anuncio?")) {
+        await deleteDoc(doc(db, "anuncios", id));
+        cargarAnuncios();
+      }
+    };
+
+    window.editarAnuncio = async (id) => {
+      const snap = await getDoc(doc(db, "anuncios", id));
+      if (snap.exists()) {
+        const a = snap.data();
+        anuncioInput.value = a.mensaje;
+        idEditandoAnuncio = id;
+        msgAnuncio.innerHTML = `<div class="success">✏️ Editando anuncio.</div>`;
+      }
+    };
+
+    cargarActividades();
+    cargarAnuncios();
+  </script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Login Administrador</title>
+  <style>
+    body {
+      background: #002e1f;
+      color: white;
+      font-family: sans-serif;
+      text-align: center;
+      padding: 40px;
+    }
+    .login-box {
+      background: #003e2f;
+      padding: 20px;
+      border-radius: 8px;
+      display: inline-block;
+    }
+    input {
+      padding: 10px;
+      margin: 8px;
+      width: 200px;
+      border-radius: 5px;
+    }
+    button {
+      padding: 10px 20px;
+      background: #00e676;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-box">
+    <h2>🔒 ¿Eres administrador?</h2>
+    <input type="email" id="correo" placeholder="Correo electrónico"><br>
+    <input type="password" id="clave" placeholder="Contraseña"><br>
+    <button id="loginBtn">Entrar como administrador</button>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
+  
+    const firebaseConfig = {
+      apiKey: "AIzaSyDVn8rox_TbXhGFRKP_mW_zjaIHS2mE84E",
+      authDomain: "acompanamiento-87e74.firebaseapp.com",
+      projectId: "acompanamiento-87e74",
+      storageBucket: "acompanamiento-87e74.appspot.com",
+      messagingSenderId: "305795840612",
+      appId: "1:305795840612:web:20c87f474b0cad842ebd71",
+      measurementId: "G-RBKVS897GV"
+    };
+  
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+  
+    // Capturamos el destino desde ?next=...
+    const urlParams = new URLSearchParams(window.location.search);
+    const destino = urlParams.get("next") || "admin_evaluacion.html";
+  
+    document.getElementById("loginBtn").addEventListener("click", async () => {
+      const email = correo.value;
+      const pass = clave.value;
+  
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, pass);
+        const user = userCredential.user;
+  
+        // SOLO ESTE UID puede pasar
+        if (user.uid === "AWKwfuy784NysnrCmhWFcZ29D0s2") {
+          window.location.href = destino;
+        } else {
+          alert("No tienes permisos de administrador.");
+        }
+      } catch (e) {
+        alert("❌ Error: " + e.message);
+      }
+    });
+  </script>
+</body>
+</html>
