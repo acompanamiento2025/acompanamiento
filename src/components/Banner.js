@@ -54,12 +54,17 @@ export const Banner = () => {
           <Col xs={12} md={6} xl={7}>
             <TrackVisibility>
               {({ isVisible }) =>
-              <div className={isVisible ? "animate__animated animate__fadeIn" : ""}>
-                <span className="tagline">Bienvenidos</span>
-                <h1>{`Acompañamiento`} <span className="txt-rotate" dataPeriod="1000" data-rotate='[ "interinstitucional" ]'><span className="wrap">{text}</span></span></h1>
-                  <p>El acompañamiento institucional tiene como objetivo brindar apoyo emocional, psicológico y educativo a quienes enfrentan situaciones de riesgo relacionadas con el consumo de sustancias psicoactivas.</p>
-                  <button onClick={() => console.log('connect')}>Grupo WhatsApp <ArrowRightCircle size={25} /></button>
-              </div>}
+              
+
+  <div className={isVisible ? "animate__animated animate__fadeIn" : ""}>
+  <span className="tagline">Bienvenidos</span>
+  <h1>{`Acompañamiento`} <span className="txt-rotate" dataPeriod="1000" data-rotate='[ "interinstitucional" ]'><span className="wrap">{text}</span></span></h1>
+  <p>El acompañamiento institucional tiene como objetivo brindar apoyo emocional, psicológico y educativo a quienes enfrentan situaciones de riesgo relacionadas con el consumo de sustancias psicoactivas.</p>
+  <button onClick={() => window.open("https://chat.whatsapp.com/IvEtE53dbqLJQSLy6jBMD6?mode=ac_c", "_blank")}>
+    Grupo WhatsApp <ArrowRightCircle size={25} />
+  </button>
+</div>
+                                     
             </TrackVisibility>
           </Col>
           <Col xs={12} md={6} xl={5}>
